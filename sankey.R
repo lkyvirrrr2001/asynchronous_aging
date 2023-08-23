@@ -213,3 +213,63 @@ for (lst in c("OVA_specific", "OVI_specific", "UTE_specific")){
 }
 go_df2 <- go_df2[!(capitalize(as.character(go_df2$Description)) %in% protein_related),]
 write.table(go_df2, "sankey_go_dn.txt", sep = '\t', quote = F, row.names = F)
+
+##Venn diagram
+venn_list1 <- list("OVA" = unique(up_df[up_df$organ == "OVA", "X"]), "OVI" = unique(up_df[up_df$organ == "OVI", "X"]), 
+                   "UTE" = unique(up_df[up_df$organ == "UTE", "X"]))
+venn_list2 <- list("OVA" = unique(dn_df[dn_df$organ == "OVA", "X"]), "OVI" = unique(dn_df[dn_df$organ == "OVI", "X"]), 
+                   "UTE" = unique(dn_df[dn_df$organ == "UTE", "X"]))
+palette <- c("#FC8D62", "#66C2A5", "#8DA0CB") #set2 color
+
+upset(fromList(venn_list1),
+      sets = c("OVA", "OVI", "UTE"),
+      keep.order = T,
+      point.size = 2.5,
+      line.size = 1,
+      mainbar.y.label = 'Numbers of intersections of DEGs',
+      sets.x.label = 'Number of DEGs',
+      sets.bar.color = palette,
+      main.bar.color = "#FF410DFF", #竖直柱图颜色
+      matrix.color = "#FF410DFF", # 点和线的颜色
+      text.scale = c(1.5,1.5,1.3,1.5,1.5,1.5)
+
+)
+
+upset(fromList(venn_list2),
+      sets = c("OVA", "OVI", "UTE"),
+      keep.order = T,
+      point.size = 2.5,
+      line.size = 1,
+      mainbar.y.label = 'Numbers of intersections of DEGs',
+      sets.x.label = 'Number of DEGs',
+      sets.bar.color = palette,
+      main.bar.color = "#5050FFFF", #竖直柱图颜色
+      matrix.color = "#5050FFFF", # 点和线的颜色
+      text.scale = c(1.5,1.5,1.3,1.5,1.5,1.5)
+)
+
+###volcano plot
+up_df2 <- ddply(up_df, .(organ),reframe, DEG = unique(X))
+gene.freq <- as.data.frame(table(up_df2$DEG), stringsAsFactors = F)
+gene.freq <- gene.freq[order(gene.freq$Freq, decreasing = T),]
+common_genes <- gene.freq[gene.freq$Freq == 3, 'Var1']
+up_df2 <- subset(up_df, X %in% common_genes)
+up_df2$X <- factor(up_df2$X, levels = unique(up_df2$X))
+up_df3 <- ddply(up_df2, .(X), summarize, avg_logFC = mean(avg_logFC), p_val_adj = mean(p_val_adj))
+up_df3$significant <- 'Up'
+
+dn_df2 <- ddply(dn_df, .(organ),reframe, DEG = unique(X))
+gene.freq <- as.data.frame(table(dn_df2$DEG), stringsAsFactors = F)
+gene.freq <- gene.freq[order(gene.freq$Freq, decreasing = T),]
+common_genes <- gene.freq[gene.freq$Freq == 3, 'Var1']
+dn_df2 <- subset(dn_df, X %in% common_genes)
+dn_df2$X <- factor(dn_df2$X, levels = unique(dn_df2$X))
+dn_df3 <- ddply(dn_df2, .(X), summarize, avg_logFC = mean(avg_logFC), p_val_adj = mean(p_val_adj))
+dn_df3$significant <- 'Down'
+
+df_volcano <- rbind(up_df3, dn_df3)
+(p <- ggplot(
+  df_volcano, aes(x = avg_logFC, y = -log10(p_val_adj))) +
+    geom_point(aes(color = significant), size=2) +
+    scale_color_manual(values = c("Down" = "#5050FFFF","Up" = "#FF410DFF", "Stable" = "grey")))
+
