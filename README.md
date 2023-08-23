@@ -4,7 +4,7 @@ Successful pregnancies require fine coordination among the reproductive organs. 
 
 This repository contains custom codes used to analyse the data related in the articel "Asynchronous female reproductive organ ageing as revealed by single-cell transcriptomic atlas ". 
  
-Other codes are all open-source codes that can be found in the official website of the follwing tools. 
+Other codes are all open-source codes that can be found in the official website of the follwing tools:  
 Seurat (version: 3.1.2, https://satijalab.org/seurat/reference/, https://satijalab.org/seurat/articles/get_started) 
 pyscenic (version: 0.11.0, https://pyscenic.readthedocs.io/en/latest/) 
 MetaNeighbour (version: 1.14.0, https://github.com/maggiecrow/MetaNeighbor) 
